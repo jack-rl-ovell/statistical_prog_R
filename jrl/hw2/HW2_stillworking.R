@@ -242,31 +242,24 @@ country <- rep(c("US","Mexico","Canada"), times = c(7,5,3))
 # (c) Create two new data frames, "hw1ca" using data.frame() function and create "hw1cb" using as.data.frame(cbind()). Both have column 1 as being score and column 2 being country. THEN CREATE AN OBJECT "ans1c" that is just a text that briefly explains how and why the two dataframes you just created are NOT identical. Understanding why these are not identical can save you a lot of R pain later. Hint: matrices all must have the same mode! If the modes of the columns are mixed, matrices force them to be the same. Does this help you understand why the above are different?
 hw1ca <- data.frame(score = score, country = country)
 hw1cb <- as.data.frame(cbind(score,country))
-ans1c <- "The reason that these two are different is because when using cbind(), the function converts any vector it recieves to characters. This is an "
+ans1c <- "The reason that these two are different is because when using cbind(), the function converts any vector it recieves to characters. This happens because when cbind() writes data to a matrix it will convert the data to the lowest mode (i.e. characters)"
 # (d) Note that the 2nd variable in hw1ca (country) is now of class "character". Change it to a factor (i.e., reassign hw1ca$country) using one of the "as.xxx" series of functions. After you've changed it, use a function on hw1ca to check that you've done it correctly.
-
-
+hw1ca$country <- as.factor(hw1ca$country)
+str(hw1ca)
 # (e) Now *in a single line using data.frame() function*, create hw1e, ensuring that the variable "country" is actually of mode "factor" rather than mode "character". See ?data.frame for an option in data.frame() that will allow you to do this.
-
-
+hw1e <- data.frame(score = score, country = country, stringsAsFactors = 1)
 # (f) Check that the modes of the variables of hw1e are what you want
-
-
+str(hw1e)
 # (g) Create a new object called "ans1g" that is the sum of the first column (score) of hw1ca. You'll need to figure out how to deal with missing values (NA) to get a valid answer. Hint: *read* those help pages!! Try ?sum
-
-
+ans1g <- sum(hw1ca[,1],  na.rm = 1)
 # (h) Create a new object called "ans1h" that is the sum of the first column of hw1cb (from c above, where you created hw1cb using as.data.frame(cbind())). It shouldn't work if you just use sum(). Why? You can't sum factors/characters. Try to nevertheless figure out a way to get the sum of hw1cb[,1]. Look at the end of section 4 for a hint of how to do this. Ensure that ans1g==ans1h is TRUE.
-
-
+#tried sum(hw1cb[1]) in console
+ans1h <- sum(as.numeric(as.character(hw1cb[,1])), na.rm = T)
+ans1h == ans1g
 # (i) Use the logical operator == to create a logical vector named "hw1j.tf" that is TRUE if hw1e$country is "Canada" and FALSE otherwise.
-
-
+hw1j.tf <- hw1e$country == "Canada"
 # (j) In a single line of code, create an object called "hw1j" that uses the logical vector hw1j.tf to find the mean score for Canada in one of the datasets above (hw1ca,hw1cg,or hw1e). See ?mean to figure out how to deal with NAs. 
-
-
-
-
-
+hw1j <- mean(hw1ca[hw1j.tf,1], na.rm = T)
 
 #6 BRIEF INTRO TO R's "SEARCH PATH" ------------------------
 # This might be a little complicated at 1st... try to understand what's going on, then try asking your classmates/instructor. The function search() tells us the packages and data.frames that R searches through to find particular objects
@@ -373,20 +366,20 @@ write(x="Hi all, this is something I'm writing to help out in the R class.
 #HW Problem 2 ------------------------
 # (a) Open up each of the "country.data.xxx" files created in #7 above in a text editor (like Notepad or TextEdit) and in your favorite spreadsheet program (like Excel). If you can, also look at them using the "less" command in a unix terminal (preferred). Compare each one with the syntax above to see what each is actually doing. Note that you cannot look at the .RData file (it is an R proprietary file) and also note how ugly "country.data.write" is... "write" is still a useful function but its user-end 'ease of use' is low
 
+
 # (b) In a single line of code, write out a subset of x5 file named "group.subset" that excludes "group1" rows UNLESS time1 > .05. Write out column names but not row names.
-
-
+write.table(x=x5[!(x5$where=="group1" & x5$time1<=.05),], file = "group.subset", col.names = T, row.names = F)
 # (c) Create a character vector names "ans2c" whose elements are all the example datasets that are supplied to you by default in R. The package with datasets in it is (aptly) called "datasets". Use search() to find which environment they're in, then use ls() to list them.
-
+ans2c <- ls("package:datasets")
 
 # (d) Create a new dataset called "hw2d" that is the first 3 columns of x5 and all the even rows (see ?seq for creating a vector of even numbers). 
-
+hw2d <- x5[seq(from =2, to = nrow(x5), by =2),1:3]
 
 # (e) Now attach "hw2d" using attach(). By default, it will go into your second environment position (pos=2). Then type "maindata" into your R console. 
-
+attach(hw2d)
 
 # (f) Now use the matrix() and rnorm() functions to create a matrix "maindata" of random normal variables, 3 rows x 5 columns. Before seeing what "maindata" is, make sure you understand what will happen when you type "maindata" into your R console. Will it be a vector or a matrix?
-
+maindata <- matrix(rnorm(15),nrow=3, ncol=5)
 
 # (g) Perform a log (base 10) transformation of the 3rd column in hw2d ("time1"). This transformed variable should replace the 3rd column of hw2d. (Usually, I don't recommend replacing things - keep them all - but I ask you to do this for didactic reasons here) See ?log
 

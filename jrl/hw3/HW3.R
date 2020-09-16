@@ -201,26 +201,39 @@ MyPairs(Duncan)
 
 #HW Problem 1 	---------------------
 # (a) Produce a histogram of the prestige variable that has 5 bins rather than 10. Title this histogram "HW1a histogram"
-
+hist(Duncan$prestige, breaks = 9, main = "HW1a Histogram")
 
 # (b) use the plot(), abline(), and lines() functions to create a single scatterplot (just one, not the matrix of them) exactly like the one in row 2 column 1 from the pairs() graph in #7 immediately above. Title this "HW1b scatterplot". Note that you'll need to change the mode of the variable "type" to be numeric on the fly. Also note that pairs() (which only create matrices of scatterplots) and points() (which only adds points to existing plots) won't accomplish what you want. see ?plot to figure out how to make a title on the figure.
-
+attach(Duncan)
+type_numeric <- as.numeric(Duncan$type)
+formula.t.i <- income~type_numeric
+plot(type_numeric, income, main = "HW1b scatterplot")
+abline(lm(formula.t.i),col="red",lwd=2,lty=2)
+lines(lowess(formula.t.i),col="darkgreen",lwd=2)
 
 # (c) What is your verbal interpretation for the loess (green) curve for income~type in the plot you did in HW1b (or in row 2 column 1 from the pairs() graph in #7 immediately above if you couldn't do HW1b)? Assign your answer (the character string) to an object "hw1c". You can read information on this dataset using ?Duncan
+hw1c <- "After smoothing our line of best fit it is clear that each distinct category has seperate levels of income. Although, it should be noted that the way the line is behvaing might not be because of some quadrtatic pattern in the data. Rather it should be noted that R automatically coded our factors in an alphabetical way, giving our graph this shape.
 
-
-# (d) How do you interpret the linear line (red) for type~income? Assign your answer to "hw1d".
-
+# (d) How do you interpret the linear line (red) for type~income? Assign your answer to hw1d."
+hw1d <- "The linear positive trend suggests that as the factors of employment increase, income might as well. But again the reason these are increasing is because of their alphabetical trend."
 
 # (e) Run the following code:
-
+my.x <- rnorm(1e4)			      # 1e4 = 10,000 random normal numbers
+my.y <- sqrt(.3)*my.x + sqrt(.7)*rnorm(1e4)   # my.y is 60% x (r2 = .6) and 40% random noise
+Huge.data <- data.frame(y=my.y,x=my.x)
+# It is difficult to 'look' at large amounts of data. Run the following:
+Huge.data 		# not helpful!!
+plot(Huge.data)
+# As you can tell, with large datasets it is difficult to see what is going on. Using the function "sample", figure out a way to plot a random subset (n=300) of the data so that you can see the data pattern better. Title this plot "HW1e scatterplot subset"
+plot(Huge.data[sample(nrow(Huge.data), size = 300),])
 
 # (f) Now take four random samples of the data, each of size=300. Plot each in one of the panes of a 2x2 plot. Title each one "HW1f plot X" where X is 1, 2, 3, or 4 (in order). Remember the par(mfrow=) option to change R's default plotting behavior! 
-
-
-
-
-
+par(mfrow=c(2,2))
+plot(Huge.data[sample(nrow(Huge.data), size = 300),], main = "HW1f plot 1")
+plot(Huge.data[sample(nrow(Huge.data), size = 300),], main = "HW1f plot 2")
+plot(Huge.data[sample(nrow(Huge.data), size = 300),], main = "HW1f plot 3")
+plot(Huge.data[sample(nrow(Huge.data), size = 300),], main = "HW1f plot 4")
+par(op)
 #8 LINEAR REGRESSION	---------------------
 # the function "lm" takes in an object of class "formula"
 duncan.model.1 <- lm(prestige~income+education)    
@@ -317,10 +330,6 @@ plot(income.ed,prestige.ed,pch=duncan.points,main="Our partial plot")
 abline(lm(prestige.ed ~ income.ed))  
 par(op)
 
-
-
-
-
 #12 REGRESSION DIAGNOSTICS IV - HOMOGENEITY OF VARIANCE	---------------------
 # lets plot residuals against y-hat. This will help us see constant variance and whether non-linearity exists. Here's a reminder of what we have access to
 names(duncan.model.1)					      
@@ -331,10 +340,6 @@ abline(lm(duncan.model.1$residuals~duncan.model.1$fitted.values))
 plot(abs(duncan.model.1$residuals)~duncan.model.1$fitted.values)     
 abline(lm(abs(duncan.model.1$residuals)~duncan.model.1$fitted.values))    
 
-
-
-
-
 #13 REGRESSION DIAGNOSTICS V - COLINEARITY	---------------------
 # the variance infation factor (vif) estimates how much variance of betas is increased by colinearity with other predictors. Because income and education are related, the variances of the betas are ~ 2x higher than if they were unrelated. vif() is another CAR function. Note: these are the same for both predictors when there are two predictors
 vif(duncan.model.1)	
@@ -343,9 +348,6 @@ sqrt(vif(duncan.model.1))
 #We can also calculate VIF by hand:
 R2 <- summary(lm(education~income))$r.squared
 (VIF <- 1/(1-R2))
-
-
-
 
 #14 LINEAR REGRESSION II - DROPPING POINTS	---------------------
 # "minister" & "conductor" professions are outliers - let's see how things change when we remove them. which() is a useful function you should put in your book of spells 
@@ -360,10 +362,6 @@ duncan.model.2 <- lm(prestige~income+education,subset= -not.include)
 duncan.model.2 <- lm(prestige~income+education,data=Duncan[-not.include,]) 
 # compare the two; note that income slope increased and education decreased. Of course, whether to drop points depends on why the outlier exists... and may change your model's external validity
 summary(duncan.model.1);summary(duncan.model.2) 
-
-
-
-
 
 #15 LINEAR REGRESSION III - INTERACTIONS	---------------------
 # Does the effect of income on prestige depend upon one's level of education? The syntax below says to include the two main effects + the interaction, which is specified using the : operator
@@ -456,18 +454,131 @@ summary(duncan.model.5) 	# compare this model with all valid cases to the one ab
 # LogPopDens <- log(PopDensity)   # (this of course assumes you have attached the dataset)
 
 # (a) attach any library that you might use for your analysis and download then read in the data from the class website (its in comma delimitted format) 
-
-
+library(tidyverse)
+library(car)
+prim2008 <- read.csv('~/Desktop/psyc5541/jrl/hw3/prim2008.csv')
+head(prim2008)
+attach(prim2008)
+# what do we want our main variable to be? well, we are interested in whether or not the deibold machines had an impact on the election, thus we are interested in the difference in percetage voted for each candidate in 2008, more particularaly between Hilary and Barack
+DV <- Clinton08 - Obama08
+prim2008$DV <- DV
+# we are also interested in how the distribution of this is impacted by a given population of a town
+mean(DV)
+weighted.mean(DV,TotPop)
+#great we see the mean is clearly impacted when the population of each town is taken into consideration
+#by suggestion from above we will also include the log transform of the variable PopDensity and compute the unemployment rate
+logPopD <- log(PopDensity)
+unempRate <- Tot.Unemp/Tot.LaborF
+prim2008$logPopD <- logPopD
+prim2008$unempRate <- unempRate 
 
 # (b) analyze the data in any way you see fit. You can be as involved or simple as you'd like. Do make sure to check assumptions and produce basic graphs of the data that help you interpret what is going on. Make liberal use of comments to explain to me your interpretation of the data.
 
+#lets now check out each variable and it's distribution kind of like EDA! 
+# the best way to do this is with histograms so let's employ that with a bunch of our variables
+#let's start with basic info related to demographic
+par(mfrow=c(2,3))
+hist(unempRate)
+hist(logPopD)
+hist(Medianage)
+hist(TotPop)#VERY SKEWED
+hist(log(TotPop))# way better
 
+# lets hang on to the log transform of TotPop, as it could be relevant in our analysis
+logTotPop <- log(TotPop)
+prim2008$logTotPop <- logTotPop
+# lets check out some variables related to education
+par(mfrow=c(2,2))
+hist(PcntHS.Grad)#skewed! 
+hist(asin(sqrt(PcntHS.Grad/100)))#stolen from key unsure why it works so well
+hist(PcntColl.Grad) #kinda skewed -- keep an eye on this
+
+#now some graphs looking at income and financial measures
+par(mfrow=c(2,2))
+hist(MedianInc.) #transform
+hist(log(MedianInc.))
+hist(PerCapitaInc.)# neg skew, log transform
+hist(log(PerCapitaInc.))# better
+# we also want to hang onto Median Income, as this is a good measure for us
+logMedInc <- log(MedianInc.)
+prim2008$logMedInc <- logMedInc
+
+#now we would like to check out the associations between our variables, let's see how much of an association there is between our difference in % voters and unemp rates
+plot(DV~unempRate)
+abline(lm(DV~unempRate)) # not a strong association, and a there are a looot of zeros
+
+#now lets take a look at if our DV is associated with median income
+plot(DV~logMedInc)
+abline(lm(DV~logMedInc)) #not much association
+#what about w/ college education?
+plot(DV~PcntColl.Grad)
+abline(lm(DV~PcntColl.Grad))#very nice!! a quite strong association!
+
+# these graphs are nice, but we don't have any statistical measure of how much each variable is associated with our dependent variable DV. let's verage the power of cor() to get a matrix of these associations, stolen from key, ask why
+
+round(cor(cbind(DV,logMedInc,logTotPop,unempRate,PcntColl.Grad,Medianage,logPopD,lat,long),use="pairwise.complete.obs"),3)
+
+# these are all generally related, cool. let's now take a look at teh question we've all be waiting for, how much the difference in percentage is associated with diebold
+
+diebold.md.1 <- lm(DV~diebold)
+summary(diebold.md.1)
+
+#wow, this is highly significant, let's take a closer look!
+#it's important to control for the other variables that were asscoaited above, so lets do so below
+diebold.md.2 <- lm(DV~diebold+PcntColl.Grad+unempRate+Medianage+logPopD+logMedInc,na.action=na.exclude)
+summary(diebold.md.2)#diebold is still signif, but age isn't lets remove it
+diebold.md.3 <- lm(DV~diebold+PcntColl.Grad+unempRate+logPopD+logMedInc,na.action=na.exclude)
+summary(diebold.md.3)#much more signif, that's cool!
+
+#Lets use the useful info above to run some diagnostics (i.e. check residuals are ok and such)
+#the first thing we will like to check is for normalcy by looking a the residuals with qqplot()
+par(mfrow=c(1,2))
+qqPlot(diebold.md.3$residuals)
+# looks pretty normal
+info(diebold.md.3$residuals)
+# we want to test for colinearity too
+vif(diebold.md.3)
+#let's also look at the fitted values -- stolen from key
+plot(abs(diebold.md.3$residuals)~diebold.md.3$fitted.values)
+abline(lm(abs(diebold.md.3$residuals)~diebold.md.3$fitted.values))
+#hmmmm a little skewed for sure
+#lets check out cooks D now
+md.3.cooks <- cooks.distance(diebold.md.3)
+md.3.cooks
+
+#let's build our plot like earlier in the script
+par(op)
+plot(md.3.cooks,xlab="Row Number",type='n') 
+text(md.3.cooks,labels=as.character(1:length(md.3.cooks))) 
+n <- length(DV);p<-length(diebold.md.3$coefficients)
+abline(h=4/(n-p)) #woah! check it out theres quite a few above our horizontal line, lets see where they are in our data
+prim2008$cooksD <- md.3.cooks
+prim2008[md.3.cooks > 4/(n-p),c(1,2,5,7,8,11,21)]
+
+#lets check for significance once we remove these values
+include <- cooks.distance(diebold.md.3) < 4/(n-p)
+prim2 <- cbind(prim2008,logMedInc,unempRate,logPopD,logTotPop,DV)
+ls()
+trim.data <- prim.data2[include,]
+summary(diebold.md.4 <- lm(DV~diebold+PcntColl.Grad+unempRate+logPopD+logMedInc,na.action=na.exclude))
+summary(diebold.md.4)
+# still significant, that's great! 
+
+#lets do a quick check to see how much the same was seen in the 04 prim
+mod.04 <- lm(I(Kerry04-Dean04) ~ diebold+PcntColl.Grad+unempRate+logPopD+logMedInc,na.action=na.exclude)
+summary(mod.04)
+summary(mod.05 <- lm(DV~diebold+PcntColl.Grad+unempRate+logPopD+logMedInc+I(Kerry04-Dean04),na.action=na.exclude))
+summary(DieModel.5 <- lm(DV~diebold+PcntColl.Grad+unempRate+logPopD+lat*long,na.action=na.exclude))
+
+#As we see here there is a similar bias with diebold and Kerry in the 04 election, so it is somehat unclear, and the bias may be operating as function of geographical location
 
 # (c) What is your final verdict: fraud or no fraud or uncertain? Justify your answer (put your answer as a comment below - i.e., a "#" and then your answer.
 #     Who seems to benefit from the diebold bias and how big is the bias? (Note, there can be a bias even if the explanation for the bias is innocuous/no fraud)
 # I will ask someone who did a nice job to go over their answer (in < 5 minutes) in class 4. If you do not want your HW to be in competition, please make a note of that here.
 
+## UNCLEAR, there seems to be some bias, even after outliers are removed, but it is unclear what that is caused by. It is potentially due to geographical location as demostrated with Kerry, but futher analysis must be done to flesh this out. 
 
+#
 
 
 

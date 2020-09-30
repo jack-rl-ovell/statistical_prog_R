@@ -109,23 +109,26 @@ for (i in c(10,30,150)){
     abline(lm(Y~X))
   }
 }
+par(op)
 #8 REGRESSION   ---------------------
 #a) Run a linear regression of X1 & X2 & Levels on Y. Assign this to an object "lin.mod"
-
+lin.mod <- lm(Y ~ X1 + X2 + Level, data = Read.Mat)
 #b) Get the summary of lin.mod. Assign this summary to be "lin.mod.summary"
-
+lin.mod.summary <- summary(lin.mod)
 #c) What are the effects being tested by the two Levels contrasts? Can you interpret them?
+contrasts(Read.Mat$Level)
 
 #d) What is the mode of "lin.mod.summary"?
-
+mode(lin.mod.summary)
 #e) What are the names of the objects in "lin.mod.summary"?
-
+names(lin.mod.summary)
 #f) Add two new columns to Read.Mat. The first column is "fitted" which are the fitted values (y-hats) of lin.mod, and the second new column is "resids" which are the residuals of lin.mod. See ?fitted and ?resid.
-
+Read.Mat$fitted <- lin.mod$fitted.values
+Read.Mat$resids <- lin.mod$residuals
 #g) create a plot that is residuals (y-axis) plotted against fitted values (x-axis). Is there any concern of heteroscedasticity?
-
+plot(Read.Mat$resids~Read.Mat$fitted)
 #h) Create a matrix called "reg.info" and place the intercept and slopes for lin.mod in the first column of "reg.info" and place the p-values in the second column of "reg.info". Hint: you can grab objects from lin.mod.summary using "$" - same as in data.frames (indeed, data.frames ARE lists). Alternatively, see ?coef.
-
+reg.info <- matrix(lin.mod.summary$coefficients[,c(1,4)], ncol = 2)
 
 
 
@@ -156,6 +159,14 @@ dimnames(results.matrix) <- list(paste("run",1:1000),c("beta.no","se.no","p.no",
 #to get type-I errors, you want the proportion of tests that are significant (p < .05) in the null population (group 1)
 #to get type-II errors, you want the proportion of tests that are NOT significant (p > .05) in the population where the alternative hypothesis is true (group 2)
 
+results.matrix.2 <- results.matrix
+
+for(i in 1:1000){
+  data <- pop.alt[sample(nrow(pop.alt), 50),]
+  lin.mod.1 <- lm(Y~x.norm, data = samp)
+  lin.mod.2 <- lm(Y~x.outlier, data = samp)
+  
+}
 
 # HOWEVER, before you start, *think* about the simulation. What will its outcome be? Provide your answer before you begin here:
 

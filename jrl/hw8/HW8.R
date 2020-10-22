@@ -1,0 +1,372 @@
+
+# LECTURE/HW #8 - HIGH LEVEL GRAPHING IN R
+# Note: most graphics you need are easily obtained just from a single call to a function; e.g, "hist()" or "plot()". In this HW, we'll learn how to customize these graphics and manipulate them within the function call. Most importantly, we'll learn the logic behind graphing in R and how to manipulate graphics devices. Some ideas were taken from Fox's "Companion To Applied Regression" and Vincent Zoonekynd's online web book (an excellent graphing resource!)
+
+#This HW doesn't have separate HW questions sections - each section has questions that you'll need to complete.
+setwd("~/Desktop/psyc5541/jrl/hw8")
+# 1 Basics -------------------------
+# a) Change your working directory to wherever you want it to be. All graphics you write out (save) will go into this folder
+
+# b) Load the "car" library. This has datasets that will be fun to graph
+library(car)
+# c) Let's save the default par() values so that we can always come back to these. I don't know about you, but the margins in RStudio's small plotting window are often too large, making the figures squished. E.g.:
+boxplot(rnorm(50))
+#We can therefore run this first, in order to have the default margins stored in default.par.vals, and at the same time we can change the margins like so: 
+par()$mar #see what the margins start out as
+default.par.vals <- par(mar=c(3,2,2,1))
+par()$mar #we changed it
+boxplot(rnorm(50)) #does it look better?
+
+#d) Now, we can call par() again and assign this to a different set of defaults (i.e., if we want TWO different defaults to go back to later) like so:
+wide.mar.par <- par(no.readonly=TRUE)
+#Thus, if we want the original ("factory") defaults for mar, we'd call par(default.par.vals).
+#If we want the wide margin defaults, we'd call par(wide.mar.par)
+#The no.readonly is a bit (needlessly) complicated. 
+#tl;dr: if you use the no.readonly=TRUE option instead of the more intuitive approach [wide.mar.par <- par()] you won't get warnings later. 
+#Long explanation about no.readonly option: There are options in par() like cin or cra that cannot be set by the user, they can only be queried. If you say no.readonly=TRUE, you're saying to not save those values, which is good in this case because when you call them later using par(wide.mar.par), R will give a warning that these unsetable parameters can't be set. Phew. Don't worry about this too much.
+
+#e) Now let's pretend that we're graphing something and that we change the graphics parameters like so:
+par(mar=c(3,10,10,5))
+#we can check that mar is indeed changed:
+par()$mar
+boxplot(rnorm(50)) #uggh, those margins aren't working for us
+
+#f) So if we want to get back to our wide margin default settings, do this:
+par(wide.mar.par)
+par()$mar
+boxplot(rnorm(50)) #back to being good
+
+#g) On the other hand, if we want back to the very ORIGINAL margin defaults, do this:
+par(default.par.vals)
+par()$mar
+boxplot(rnorm(50))
+#OR you can always do this to get back to "factory" defaults for ALL paramters (and not just the margins) when graphing by shutting down the graphical device:
+dev.off()
+
+#h) One other important thing to know: you are NOT restricted to using the RStudio graphics pane I find RStudio graphics pane kind of sucks a lot of the time, e.g., when I want to make a large plot. To open up a new graphics pane (called a "graphical device" by R) outside of RStudio, you would call this in windows:
+windows()
+#Or this in mac
+quartz()
+#Then you can plot what you'd like inside that window, like so:
+boxplot(rnorm(50),col='blue')
+#To close it:
+dev.off()
+#to change the size and title of the device, do this in windows:
+windows(title="mydev 1",height=10,width=8)
+#Or in mac:
+quartz(title="mydev 1",height=10,width=8)
+#Then put the plot in there, in this case, boxplot:
+boxplot(rnorm(50),col="salmon")
+
+#i) let's create a graphical device function. This simply runs the function windows() if on a windows machine or quartz() if on unix/mac. This is nice because I won't have to say do this if windows and that if mac:
+gd <- function(title="default %d",width=7,height=7){
+  if(.Platform$OS.type=="windows") {windows(title,width,height)} else if (.Platform$OS.type=="unix") {quartz(title,width,height)} else stop ("what kind of OS are you on anyway? Chrome? Seriously? gd() works only for windows, mac, or unix")        
+}
+
+#Let's see if it works:
+gd(width=12,height=10)
+boxplot(rnorm(200)~sample(1:2,200,replace=TRUE),col=c("green","lightblue"))
+
+
+
+
+#2 Histograms  -------------------------
+# a) create a histogram of 500 random normal variables (mean=0, sd=1)
+hist(rnorm(500))
+
+# b) create a histogram of 500 random normal variables (mean=0, sd=1) make the title "Random Normal Variables", xlabel is "value", ylabel is "# obs". See ?hist
+hist(rnorm(500),main = "Random Normal Varaibles",xlab = "value", ylab = "# obs.")
+# c) create a histogram of 500 random  gamma variables (shape=1, rate=1) make the title "Random Gamma Variables, Shape=1", xlabel is "value", ylabel is "# obs"
+hist(rgamma(500, shape = 1),main = "Random Gamma Varaibles, shape = 1",xlab = "value", ylab = "# obs.")
+# d) create a histogram of 500 random gamma variables (shape=5, rate=1) make the title "Random Gamma Variables, Shape=5", xlabel is "value", ylabel is "# obs"
+hist(rgamma(500, shape = 5),main = "Random Gamma Varaibles, shape = 5",xlab = "value", ylab = "# obs.")
+# e) create a histogram of 500 random gamma variables (shape=50, rate=1) make the title "Random Gamma Variables, Shape=50", xlabel is "value", ylabel is "# obs"
+hist(rgamma(500, shape = 50),main = "Random Gamma Varaibles, shape = 50",xlab = "value", ylab = "# obs.")
+# f) write a function called gammaHist that takes a single argument, shape, and creates a histogram like those above with the given shape and titles the plot something like "Random Gamma Variables, Shape=" xxx. HINT: paste may come in handy for this latter part!
+gammaHist <- function(shape){
+  hist(rgamma(500, shape = shape), main = paste("Random Gamma Variables, shape = ", shape), xlab = "value", ylab = "# obs.")
+}
+# g) now graph b, c, d, & e but place them all on a single 2x2 graph. Make sure to use par(mfrow) to accomplish this. After you've created your plot, change mfrow back to the wide defaults from above.
+par(mfrow= c(2,2))
+hist(rnorm(500),main = "Random Normal Varaibles",xlab = "value", ylab = "# obs.")
+gammaHist(1)
+gammaHist(5)
+gammaHist(50)
+par(wide.mar.par)
+# h) Just FYI, here's how you overlay a "density smoother" on top of a histogram you've already produced
+hist(rand.nm <- rnorm(500), main="Random Normal Variables", xlab="value",
+     ylab= "# obs", probability=TRUE) 
+lines(density(rand.nm),lwd=2)
+
+
+
+
+
+#3 Boxplots -------------------------
+# all datasets and functions in car 
+ls(2)  
+ls("car") #an alternative (works if car isn't in second position)
+
+# info on Cowles dataset in car
+?Cowles  
+
+# a) Create a boxplot of neuroticism. Title it "Boxplot of Neuroticism: Cowles data" using the "main" argument
+boxplot(Cowles$neuroticism, main = "Boxplot of Neuroticism: Cowles data")
+# b) Create a boxplot of extraversion. Title it "Boxplot of Extraversion: Cowles data" using the "main" argument. Also, make it a 'notched' boxplot, and make it lightblue filled
+boxplot(Cowles$extraversion, main = "Boxplot of Extraversion: Cowles data", col="lightblue")
+# c) Create the same extraversion graph as above, but make the range of whiskers go to double the interquartile range
+boxplot(Cowles$extraversion, main = "Boxplot of Extraversion: Cowles data", col="lightblue", range = 2)
+# d) Let's say we want side-by-side boxplots of neuroticism as a function of sex. Can you figure out how? See the formula (and the ...) arguments under ?boxplot. Give the boxplot an informative title
+par(mfrow = wide.mar.par)
+boxplot(neuroticism ~ sex, 
+        data = Cowles,
+        names= c("female","male"),
+        main = "Neurotocism by sex",
+        xlab = "Sex",
+        ylab = "Neurotocism")
+        
+# e) Do the same as above, but make the female box be red and the male box be blue. Note that the 'col' argument can accept a single value, but can also accept a vector (a character vector in this case)
+par(mfrow = wide.mar.par)
+bp <- boxplot(neuroticism ~ sex, 
+        data = Cowles,
+        names= c("female","male"),
+        main = "Neurotocism by sex",
+        xlab = "Sex",
+        ylab = "Neurotocism",
+        col = c("red","blue"))
+# f) Did you know that boxplot() (and other graphical functions) don't only create plots; they also return specific values - see "Value" near the end of ?boxplot Let's say we want to get the exact values (the 2 mins, the 1st quartile, the median, etc.) that defined the boxplot above. Find these values and assign this to object "Neu.boxplot". 
+Neu.boxplot <- bp$stats
+# g) This one is like (d) above but a little trickier. This time make a side-by-side boxplot of neuroticism vs. extraversion. Make extraversion "darkolivegreen3" and neuroticism "saddlebrown". Give the graph an informative name
+boxplot(Cowles$neuroticism, Cowles$extraversion,
+        names= c("neuroticism","extraversion"),
+        main = "Neurotocism vs Extraversion",
+        col = c("darkolivegreen3","saddlebrown"))
+
+
+
+# 4 QQ Plot -------------------------
+# a) Using qqPlot from the car package, create a 1x2 (1 row, 2 columns) of 2 QQ Plots assessing the normality of extraversion & neuroticism. Title them appropriately
+quartz()
+par(mfrow = c(1,2))
+qqp(Cowles$extraversion)
+qqp(Cowles$neuroticism)
+# b) Here's how you create a plot using (base) functions qqnorm & qqline:
+qqnorm(Cowles$extraversion,main="QQ plot of extraversion")
+qqline(Cowles$extraversion,col="red",lwd=2)
+# Now to create the same basic 1x2 plot as in 4a but using qqnorm and qqline instead, we'd do:
+op <- par(mfrow=c(1,2))
+qqnorm(Cowles$extraversion,main="QQ plot of extraversion")
+qqline(Cowles$extraversion,col="red",lwd=2)
+qqnorm(Cowles$neuroticism,main="QQ plot of neuroticism")
+qqline(Cowles$neuroticism,col="purple",lwd=2)
+par(op)
+
+
+# 5 Bar Charts -------------------------
+# Bar plots are much easier to compare heights of bars than areas of circles! (i.e., don't use pie charts!). Take a look at the HairEyeColor array ?HairEyeColor. But before we get to this, let's check out the colors R has for us. Because I'll ask you to choose some colors for this one, let's see what colors R has by default:
+colors()
+#We can also demo the colors in R interactively. I'll bet you'll want to open up a large graphical device outside of RStudio:
+gd(height=12,width=12) #or if this doesn't work, use windows() or quartz()
+demo("colors")
+
+# a) Create a side-by-side bar chart of eye color (collapsed across Sex and across Hair color). Color each bar the actual eye color and give informative title. Hazel eye color is closest to "khaki4" in my opinion
+hec<-HairEyeColor
+males <- hec[,,1]
+females <- hec[,,2]
+hec2 <- males+females
+ec <- apply(hec,2,sum)
+barplot(ec, col=c("brown","blue","khaki4","green"))
+
+# b) Do the same as above but make the barplot "stacked" rather than side-by-side. Note: Read the "height" argument carefully in ?barplot Is this easier to see than (a)?
+ec.mat <- as.matrix(ec)
+barplot(ec.mat, legend.text = T)
+
+# c) Now we want to graph both eye color AND hair color in the same barplot. Look closely at how I do it:
+(hair.eye <- apply(HairEyeColor,c(1,2),sum))
+barplot(hair.eye,legend.text=TRUE)
+# Now do the same thing as above but make the bars grouped & side-by-side & give an informative title. Also, give each bar appropriate colors matching the hair color
+hair.eye.mat <- as.matrix(hair.eye)
+barplot(hair.eye.mat, beside = T, legend.text = T, col=c("black","brown","red","yellow"), main = "Hair color grouped by eye color")
+
+# 6 Visualizing correlations ------------------------- 
+?LifeCycleSavings
+summary(LifeCycleSavings)
+LifeCycleSavings
+# a) Use the function plot() to plot all the scatterplots in the data.frame LifeCycleSavings
+plot(LifeCycleSavings)
+# b) Find all the correlations in LifeCycleSavings
+cor(LifeCycleSavings)
+# Notice how the function plot() and cor() do things automatically given the class of LifeCycleSavings. We'll get into this in more detail in a bit
+
+
+# d) Use the plotcorr() function from package "ellipse" (which you'll need to install) to make a correlelogram of LifeCycleSavings. Give informative title. Think about how useful these functions are when looking at correlations in huge datasets!
+install.packages("ellipse")
+require(ellipse)
+ellipse::plotcorr(cor(LifeCycleSavings), main = "Correlations of variables in LifeCycleSavings")
+
+# 7 The generic function plot()  -------------------------
+# plot() and many other functions in R are "generic" functions - how the work depends on the class of the object passed to them. This is a very important concept to understand in R. In particular, generic functions:
+#A - Look at the class of the first argument.
+#B - Paste the class onto the function separated by a dot. E.g., plot.data.frame is the plot function for data.frames and plot.table for tables.
+#C - If a function of that name exists, generic functions redo the function call with the same arguments but the new function name.
+#D - If the R function class returns a vector when applied to the first argument, they try each component in turn until they find a match.
+#E - If no matching function is found, they paste “default” onto the name of the generic function, and redo the function call with that function, if it exists.
+#F - If no match is found, this is an error.
+
+# plot() is the single most important graphing function in R. You use it all the time, from a high level function that does everything you need, to being used in conjunction with low level functions to do very specific things. Indeed, as described above, plot() is a collection of *32* different functions in base R, and many more depending on the libraries you've loaded! Here's a list of the 32 ones in base R:
+methods(plot)   
+
+# a) Make hair.eye be of class matrix. Plot it
+plot(as.matrix(hair.eye))
+# b) Make hair.eye be of class data.frame. Plot it
+plot(as.data.frame(hair.eye))
+# c) Make hair.eye be of class table. This is called a "Mosaic Plot"
+plot(as.table(hair.eye))
+# d) Run the following to create "a", an object of class formula. Plot it using plot(a).
+x1 <- rnorm(50); x2 <- sqrt(.2)*x1 + sqrt(.8)*rnorm(50)
+a <- formula(rnorm(50)~x1+x2) 
+class(a)
+plot(a)
+# e) Create an object of class lm, using the formula from above and placing it in the lm() function. Plot it.
+plot(lm(rnorm(50)~x1+x2))
+# f) What exact function was being called in (e)?
+plot.lm()
+# g) What would you type if you want to get help for using the function in (f)?
+?plot.lm()
+# h) What are the different functions available when you use the hist() function?
+methods(hist)
+
+
+# 8 plot() to make scatterplots  -------------------------
+# When you give plot() an x vector and a y vector, it calls plot.default() and it produces a scatterplot. This is the most common case in plotting, and you can do a HUGE number of things with "scatterplots" - such as scatterplots, line plots, interaction plots, qqplots, smooth curve plots, etc. We'll cover more about plots as we progress!
+
+# a) Are extraversion and neuroticism related? Create a scatterplot of the two.
+plot(Cowles$extraversion, Cowles$neuroticism)
+# b) yowzers. That plot wasn't too helpful. Do you understand why it was not? The function jitter() can help in these situations. Use it to add noise to each point. Make the title of the plot be "Relationship b/w E & N, r=[corr]" where [corr] is the correlation between E & N. Don't hard code this. Rather, use paste() to do it.
+corr <- cor(jitter(Cowles$extraversion), (Cowles$neuroticism))
+plot(jitter(Cowles$extraversion), (Cowles$neuroticism), main = paste("Relationship b/w E & N, r=",corr))
+
+# that's better, but maybe a best fit line would help even more.  Later, we'll see how to add things on to existing graphs (like best fit lines).
+
+
+
+
+
+# 9 plot to make line graphs -------------------------
+plot(CanPop)
+# the above isn't quite what we want. It calls "plot.data.frame" which requests a scatterplot.
+
+# a) Create a line plot of Can.pop, using the "type" argument in plot
+plot(CanPop, type = "l")
+# b) Create a plot as in (a) but that has both points as well as lines connecting them
+plot(CanPop, type = "b")
+# c) nhtemp (autoloaded in R) has the avg temps for New Haven, CT across years what is the class of the nhtemp object?
+class(nhtemp)
+# d) make a default plot of nhtemp. 
+plot(nhtemp)
+# e) From what you've learned, you should see there's another way to accomplish (a) above. This was originally a question but just takes too long to figure out the correct format for ts. here's how:
+a <- ts(data=CanPop[,2],start=1851,frequency=1/10) 
+plot(a) 
+
+# f) plot the default of EuStockMarkets
+plot(EuStockMarkets)
+
+
+# 10 Using par() -------------------------
+# We've already covered this previously and we'll cover this function in more detail next time. par() is the single most useful function in R graphics. As you know by now, it is akin to options() except that it refers to the default graphics options rather than the default session options. 
+
+# a) Try typing par() and options() below and compare:
+par()
+options()
+
+# b) par() can be used in two ways that seem distinct but really aren't. First, you can call par() directly to change the default of all subsequent plots (or until you change the options back to what they were). This is how we've used par() so far. Use par() to change the line width to double its current value and make the title of the figure twice as large as it its default (see lwd and cex.main). Then plot the  EuStockMarkets. Make sure to assign par() so that you change it back after this.
+
+par(lwd = 2, cex.main = 2)
+plot(EuStockMarkets)
+par(default.par.vals)
+
+# c) Another way to accomplish the same thing is *within the plot function*. This time, do what you did above, but place the arguments within plot():
+
+
+plot(EuStockMarkets, par(lwd = 2, cex.main = 2))
+
+# Unlike par(), these changes in plot (e.g., cex.main) are *temporary*. If you look in ?plot or ?anygraphicfunction you'll note an argument "..." that says "arguments passed to par(). So basically, we can put many par() arguments right within the function! So why do we ever mess around with par()? Two reasons. One - if we want to make global changes. But far and away the most common reason = there are certain arguments that concern global features of a graph that can't be done within the graphing function itself. Examples are changing to multiple figures (mfrow), telling R not to make a new graph (new), or changing outer margins (omar)
+
+# d) Take a look at the following graph (if interested in simulating, take a close look at the code - this shows how to make relatedness between differently distributed data:
+a <- rnorm(100)
+plot(a, sqrt(.6)*qgamma(pnorm(a),shape=1)+ sqrt(.4)*rgamma(100,shape=1))
+# Now use par() to change the upper and lower margins of the plot to be one line larger (on all axes) than they currently are, then rerun the same plot above. Note: to do this, it might be helpful to know how large the axis margins are now and what the option is that sets margins (Hint: it is NOT oma, omd, or omi; Hint2: it's mar)
+
+par(mar = (par()$mar + 1)) 
+plot(a, sqrt(.6)*qgamma(pnorm(a),shape=1)+ sqrt(.4)*rgamma(100,shape=1))
+par(default.par.vals)
+# e) Let's say that I want to change the foreground colors to yellow (instead of black) and background colors to black (rather than white) in the plot we made in d above. Do so using par (see the bg and fg arguments), but make sure you can easily revert back to default colors
+par(bg = "black", fg ="yellow")
+plot(a, sqrt(.6)*qgamma(pnorm(a),shape=1)+ sqrt(.4)*rgamma(100,shape=1))
+par(op)
+
+
+# 11 More about colors in R -------------------------
+# You can get colors using rgb specification
+rgb(1,1,0)
+rgb(.5,.8,.95)
+plot(0:7,seq(1,1.4,length.out=8),type='n',xlab="",ylab="",xaxt='n',yaxt='n',bty='u',main="RGB Colors")
+points(1:6,rep(1.2,6),pch=19,col=c(rgb(0,0,1),rgb(0,1,0),rgb(1,0,0),rgb(1,1,0),rgb(0,1,1),rgb(1,0,1)),cex=2)
+text(1:6,rep(1.3,6),c('rgb(0,0,1)','rgb(0,1,0)','rgb(1,0,0)','rgb(1,1,0)','rgb(0,1,1)','rgb(1,0,1)'),cex=.75)
+
+
+# Or using the color function, which creates a vector these are all the named colors available in R
+colors()   
+a <- colors()
+a[8]
+
+# There are 657 names of colors in R. Let's take a look at them:
+# for unix or mac users with X11
+plot(rep(1:26,26)[1:657],rep(1:26,each=26)[1:657],type='n')
+text(rep(1:26,26)[1:657],rep(1:26,each=26)[1:657],as.character(1:length(colors())),col=colors(),cex=.75)
+
+# here are some other special color functions
+rainbow(5) 
+rainbow(10) #more gradations
+heat.colors(10)
+terrain.colors(10)
+topo.colors(5)
+cm.colors(5)
+
+# a) We want to demonstrate the colors of the five color functions above. To do so, make a plot that is subdivided into 5 rows (using mfrow). Each plot has title, "rainbow" (for rainbow demo), "heat.colors" (for heat.color demo), etc. In each graph place 10 solid colored points on a horizontal that represent 10 rainbow colors (rainbow(10)), the 10 heat.colors, etc. You might try pilfering from the rgb demo above. Important note: points() in the rgb demo is a low level function. It adds points onto an existing graph. We'll be seeing this lots in HW 13.
+par(op)
+par(mfrow = c(5,1))
+plot(1:10, main = "rainbow", type ="n")
+points(1:10, col = rainbow(10), pch=19)
+plot(1:10, main = "rainbow", type ="n")
+points(1:10, col = heat.colors(10), pch=19)
+plot(1:10, main = "rainbow", type ="n")
+points(1:10, col = terrain.colors(10), pch=19)
+plot(1:10, main = "rainbow", type ="n")
+points(1:10, col = topo.colors(10), pch=19)
+plot(1:10, main = "rainbow", type ="n")
+points(1:10, col = cm.colors(10), pch=19)
+
+# these aren't lines :(, below is stolen from key, for understanding how to graph a bit better
+op <- par(mfrow = c(5,1))
+plot(0:11,seq(1,1.4,length.out=12),type='n',xlab="",ylab="",xaxt='n',yaxt='n',bty='u',main="Rainbow Colors")
+points(1:10,rep(1.2,10),pch=19,col=rainbow(10),cex=5)
+plot(0:11,seq(1,1.4,length.out=12),type='n',xlab="",ylab="",xaxt='n',yaxt='n',bty='u',main="Heat Colors")
+points(1:10,rep(1.2,10),pch=19,col=heat.colors(10),cex=5)
+plot(0:11,seq(1,1.4,length.out=12),type='n',xlab="",ylab="",xaxt='n',yaxt='n',bty='u',main="Topo Colors")
+points(1:10,rep(1.2,10),pch=19,col=topo.colors(10),cex=5)
+plot(0:11,seq(1,1.4,length.out=12),type='n',xlab="",ylab="",xaxt='n',yaxt='n',bty='u',main="Terrain Colors")
+points(1:10,rep(1.2,10),pch=19,col=terrain.colors(10),cex=5)
+plot(0:11,seq(1,1.4,length.out=12),type='n',xlab="",ylab="",xaxt='n',yaxt='n',bty='u',main="CM Colors")
+points(1:10,rep(1.2,10),pch=19,col=cm.colors(10),cex=5)
+par(op)
+
+
+# NEXT TIME - GRAPHING PART DEUX: 
+# more on par()
+# more on low level graphing (lines, text, legend, points, abline, arrow,
+# loess, title)
+# how to get advanced text in R graphics (math and greek symbols)
+
+
+

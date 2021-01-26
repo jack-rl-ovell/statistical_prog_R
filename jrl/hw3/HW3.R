@@ -236,7 +236,7 @@ plot(Huge.data[sample(nrow(Huge.data), size = 300),], main = "HW1f plot 4")
 par(op)
 #8 LINEAR REGRESSION	---------------------
 # the function "lm" takes in an object of class "formula"
-duncan.model.1 <- lm(prestige~income+education)    
+duncan.model.1 <- lm(prestige~income+education, data = Duncan)    
 # notice that your assign the output to be an object (duncan.model.1 in this case)
 duncan.model.1	
 # class is "lm" - automatically assigned by the function "lm"
@@ -386,7 +386,7 @@ summary(duncan.model.3);summary(duncan.model.4)
 class(type)			# class is factor - not ordered factor. This is important for interpretation
 # what is the default coding scheme R has given "type"? Remember, we can change this default using options(contrasts=xxx)
 contrasts(type)			
-duncan.model.5 <- lm(prestige~type)   # this says to include the main effect of type
+duncan.model.5 <- lm(prestige~type,data=Duncan)   # this says to include the main effect of type
 summary(duncan.model.5)	# the first effect is how much higher in prestige prof is than blue collar. The second effect is how much higher in prestige wc is than blue collar. A common mistake is to think the (e.g.) first effect is how much higher prof is than the average of bc and wc, but this isn't right. Could you have figured this out? If not, look again at contrasts(type) and ask me to explain it.
 #We can look at the means of the three groups using the function tapply:
 ?tapply
@@ -525,7 +525,7 @@ summary(diebold.md.1)
 
 #wow, this is highly significant, let's take a closer look!
 #it's important to control for the other variables that were asscoaited above, so lets do so below
-diebold.md.2 <- lm(DV~diebold+PcntColl.Grad+unempRate+Medianage+logPopD+logMedInc,na.action=na.exclude)
+diebold.md.2 <- lm(DV~diebold+PcntColl.Grad+unempRate+Medianage+logPopD+logMedInc,na.action=na.exclude,data = Duncan)
 summary(diebold.md.2)#diebold is still signif, but age isn't lets remove it
 diebold.md.3 <- lm(DV~diebold+PcntColl.Grad+unempRate+logPopD+logMedInc,na.action=na.exclude)
 summary(diebold.md.3)#much more signif, that's cool!
